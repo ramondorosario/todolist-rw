@@ -15,4 +15,10 @@ const preview = {
 
 export default preview
 
-export const decorators = [(Story) => <Story />]
+export const decorators = [
+  (Story) => (
+    <div className="border-1 min-h-screen">
+      <Story />
+    </div>
+  ),
+]

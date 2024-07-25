@@ -20,6 +20,8 @@ module.exports = {
 				"mauve-3": "#232225",
 				"mauve-5": "#323035",
 				"mauve-6": "#3C393F",
+				"mauve-7": "#49474E",
+				"mauve-8": "#625F69",
 
 				"tomato-7": "#853A2D",
 				"tomato-9": "#E54D2E",
