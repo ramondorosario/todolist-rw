@@ -15,7 +15,7 @@ export const Checkbox = ({ onChange, ...props }: CustomCheckboxProps) => {
     <ShadCheckbox
       onClick={() => {
         setChecked(!checked)
-        onChange(!checked)
+        onChange?.(!checked)
       }}
       {...props}
     />

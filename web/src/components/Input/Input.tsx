@@ -1,30 +1,9 @@
-import { InputProps, Input as ShadInput } from '@/components/ui/input'
-import { Label as ShadLabel } from '@/components/ui/label'
+import { Input as ShadInput } from '@/components/ui/input'
 
-type OrientationType = 'top' | 'left' | 'right';
+type InputProps = React.ComponentProps<typeof ShadInput>
 
-type CustomInputProps = {
-  label: string
-  id: string
-  orientation?: OrientationType
-} & Omit<InputProps, 'id'>
-
-const dictionary: Record<OrientationType, string> = {
-  top: 'flex-col',
-  left: 'flex-row items-center',
-  right: 'flex-row-reverse items-center',
-}
-
-export const Input = ({
-  id,
-  label,
-  orientation = 'top',
-  ...props
-}: CustomInputProps) => {
-  return (
-    <div className={`flex ${dictionary[orientation]} gap-1`}>
-      <ShadLabel className='text-base text-white' htmlFor={id}>{label}</ShadLabel>
-      <ShadInput id={id} {...props} />
-    </div>
-  )
-}
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (props, ref) => {
+    return <ShadInput {...props} ref={ref} />
+  }
+)
