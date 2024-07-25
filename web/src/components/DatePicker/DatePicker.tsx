@@ -24,7 +24,7 @@ export function DatePicker({ onChange }: { onChange?(value: Date): void }) {
           variant={'outline'}
           className={cn(
             'w-[280px] justify-start border-mauve-6  bg-mauve-5 text-left font-normal outline-none hover:border-tomato-9 hover:bg-mauve-5 hover:text-white focus-visible:border-tomato-9 focus-visible:ring-0 focus-visible:ring-offset-0 ',
-            !date && 'text-muted-foreground'
+            !date && 'text-muted-foreground rounded'
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
