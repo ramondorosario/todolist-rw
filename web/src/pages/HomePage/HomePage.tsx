@@ -2,7 +2,7 @@ import { Box } from '@/components/Box/Box'
 import { Button } from '@/components/Button/Button'
 import { ListContainer } from '@/components/ListContainer/ListContainer'
 import { ListItem } from '@/components/ListItem/ListItem'
-import { Metadata } from '@redwoodjs/web'
+import { Metadata, useMutation, useQuery } from '@redwoodjs/web'
 import { CalendarCheck, CalendarDays, Inbox, Star } from 'lucide-react'
 import {
   Dialog,
@@ -14,46 +14,71 @@ import {
 
 import { useState } from 'react'
 import { TaskForm } from '@/components/TaskForm/TaskForm'
+import { Loading } from '@/components/Loading/Loading'
+import { CreateTaskInput, MutationcreateTaskArgs, Task } from 'types/graphql'
 
-function CustomDialog() {
-  const [openModal, setOpenModal] = useState<boolean>(false)
+const CREATE_TASKS = gql`
+  mutation CreateTaskMutation($input: CreateTaskInput!) {
+    createTask(input: $input) {
+      id
+      title
+      description
+      dueDate
+      priority
+    }
+  }
+`
 
-  return (
-    <>
-      <Button onClick={() => setOpenModal(true)}>Adicionar</Button>
-      <Dialog
-        open={openModal}
-        onOpenChange={(isOpen) => {
-          setOpenModal(isOpen)
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="mb-1">Cadastrar task</DialogTitle>
-            <hr className="border-1 border-mauve-6 " />
-          </DialogHeader>
-
-          <TaskForm
-            footer={
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant={'ghost'}
-                  onClick={() => setOpenModal(false)}
-                >
-                  Cancelar
-                </Button>
-                <Button>Cadastrar</Button>
-              </DialogFooter>
-            }
-          />
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
+const GET_TASKS = gql`
+  query GetTasks {
+    tasks {
+      id
+      title
+    }
+  }
+`
 
 const HomePage = () => {
+  const [openModal, setOpenModal] = useState<boolean>(false)
+
+  const { loading, data } = useQuery<{
+    tasks: {
+      id: string
+      title: string
+    }[]
+  }>(GET_TASKS)
+  const [create, { loading: mutationLoading }] = useMutation<
+    { createTask: Task },
+    MutationcreateTaskArgs
+  >(CREATE_TASKS, {
+    update(cache, { data }) {
+      const currentList = cache.readQuery<{ tasks: Task[] }>({
+        query: GET_TASKS,
+      })
+
+      if (currentList && data) {
+        cache.writeQuery({
+          query: GET_TASKS,
+          data: {
+            tasks: [...currentList.tasks, data.createTask],
+          },
+        })
+      }
+    },
+  })
+
+  function onSubmit(input: CreateTaskInput) {
+    create({
+      variables: {
+        input,
+      },
+    }).finally(() => {
+      setOpenModal(false)
+    })
+  }
+
+  console.log(data)
+
   return (
     <>
       <Metadata title="Home" description="Home page" />
@@ -75,18 +100,63 @@ const HomePage = () => {
         </ListContainer>
       </Box>
 
-      <Box title="Tasks" footer={<CustomDialog />}>
-        <ListContainer gap={2}>
-          <ListItem.Root icon={<Star size={20} />}>
-            Minha primeira tarefa
-          </ListItem.Root>
-          <ListItem.Root icon={<Star size={20} />}>
-            Minha segunda tarefa
-          </ListItem.Root>
-          <ListItem.Root icon={<Star size={20} />}>
-            Minha terceira tarefa
-          </ListItem.Root>
-        </ListContainer>
+      <Box
+        title="Tasks"
+        className="h-full"
+        footer={
+          <>
+            <Button onClick={() => setOpenModal(true)}>Adicionar</Button>
+            <Dialog
+              open={openModal}
+              onOpenChange={(isOpen) => {
+                setOpenModal(isOpen)
+              }}
+            >
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="mb-1">Cadastrar task</DialogTitle>
+                  <hr className="border-1 border-mauve-6 " />
+                </DialogHeader>
+
+                <TaskForm
+                  onSubmit={(data) =>
+                    onSubmit({
+                      title: data.title,
+                      description: data.description,
+                      dueDate: data.dueDate.toISOString(),
+                      priority: data.priority,
+                    })
+                  }
+                  footer={
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant={'ghost'}
+                        onClick={() => setOpenModal(false)}
+                        disabled={mutationLoading}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button disabled={mutationLoading}>Cadastrar</Button>
+                    </DialogFooter>
+                  }
+                />
+              </DialogContent>
+            </Dialog>
+          </>
+        }
+      >
+        {loading ? (
+          <Loading />
+        ) : (
+          <ListContainer gap={2}>
+            {data?.tasks.map((task) => (
+              <ListItem.Root key={task.id} icon={<Star size={20} />}>
+                {task.title}
+              </ListItem.Root>
+            ))}
+          </ListContainer>
+        )}
       </Box>
     </>
   )
