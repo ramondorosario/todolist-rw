@@ -1,12 +1,12 @@
 import { useLocation } from '@redwoodjs/router'
 
-export type ListFilterItemType = 'all' | 'today' | 'week' | 'favorite'
+export type ListFilterItemType = 'all' | 'today' | 'week' | 'favorites'
 
 const listFilterItemType: { [key: string]: ListFilterItemType } = {
   ALL: 'all',
   TODAY: 'today',
   WEEK: 'week',
-  FAVORITE: 'favorite',
+  FAVORITES: 'favorites',
 }
 
 export function getQueryParams(queryString: string): ListFilterItemType | null {

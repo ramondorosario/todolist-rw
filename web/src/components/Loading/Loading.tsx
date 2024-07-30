@@ -1,10 +1,10 @@
-export const Loading = () => {
+export const Loading = ({ size = 10 }: { size?: number }) => {
   return (
-    <div className=" flex w-full items-center justify-center">
+    <div className=" flex h-full w-full items-center justify-center">
       <div role="status">
         <svg
           aria-hidden="true"
-          className="h-10 w-10 animate-spin fill-tomato-9 text-gray-200 dark:text-gray-600"
+          className={`h-${size} w-${size} animate-spin fill-tomato-9 text-gray-200 dark:text-gray-600`}
           viewBox="0 0 100 101"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"

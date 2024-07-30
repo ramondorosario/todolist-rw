@@ -12,8 +12,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 
-export function DatePicker({ onChange }: { onChange?(value: Date): void }) {
-  const [date, setDate] = React.useState<Date>()
+export function DatePicker({
+  onChange,
+  defaultValue,
+}: {
+  onChange?(value: Date): void
+  defaultValue?: Date
+}) {
+  const [date, setDate] = React.useState<Date | undefined>(defaultValue)
 
   React.useEffect(() => date && onChange?.(date), [date])
 

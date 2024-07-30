@@ -28,6 +28,8 @@ model Task {
   createdAt   DateTime @default(now())
   dueDate     DateTime
   priority    Priority
+  isCompleted Boolean  @default(false)
+  isFavorite  Boolean  @default(false)
 
   @@map("tasks")
 }

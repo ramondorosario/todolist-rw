@@ -18,7 +18,7 @@ const TaskFormSchema = z.object({
   }),
 })
 
-type TaskFormType = z.infer<typeof TaskFormSchema>
+export type TaskFormType = z.infer<typeof TaskFormSchema>
 
 export const TaskForm = ({
   initialValues,
@@ -26,7 +26,7 @@ export const TaskForm = ({
   onSubmit,
 }: {
   footer?: ReactNode
-  initialValues?: TaskFormType
+  initialValues?: Partial<TaskFormType>
   onSubmit?(data: TaskFormType): void
 }) => {
   const {
@@ -66,12 +66,16 @@ export const TaskForm = ({
               { value: 'medium', label: 'Médio' },
               { value: 'high', label: 'Alto' },
             ]}
+            defaultValue={initialValues?.priority}
             onChange={(v: 'low' | 'medium' | 'high') => setValue('priority', v)}
           />
         </Label>
 
         <Label text="Data de vencimento" errorMessage={errors.dueDate?.message}>
-          <DatePicker onChange={(date) => setValue('dueDate', date)} />
+          <DatePicker
+            defaultValue={initialValues?.dueDate}
+            onChange={(date) => setValue('dueDate', date)}
+          />
         </Label>
       </div>
 

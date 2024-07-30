@@ -11,10 +11,12 @@ export const schema = gql`
     description: String
     dueDate: Date!
     priority: Priority!
+    isFavorite: Boolean
+    concluded: Boolean
   }
 
   type Query {
-    tasks: [Task!]! @skipAuth
+    tasks(filter: String): [Task!]! @skipAuth
     task(id: String!): Task! @skipAuth
   }
 
@@ -35,6 +37,7 @@ export const schema = gql`
   type Mutation {
     createTask(input: CreateTaskInput!): Task! @skipAuth
     updateTask(id: String!, input: UpdateTaskInput!): Task! @skipAuth
-    deleteTask(id: String!): Task! @skipAuth
+    deleteTasks(ids: [String]!): [String]! @skipAuth
+    makeFavoriteTask(id: String!, isFavorite: Boolean!): Task! @skipAuth
   }
 `

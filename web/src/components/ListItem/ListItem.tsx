@@ -1,54 +1,58 @@
 import { ReactNode, useState } from 'react'
 import { Checkbox } from '@/components/Checkbox/Checkbox'
-import { Link, NavLink, routes, useLocation } from '@redwoodjs/router'
+import { Link, NavLink, routes } from '@redwoodjs/router'
 import { getQueryParams, ListFilterItemType } from '@/utils/getQueryParams'
-import { parseSearch } from '@redwoodjs/router'
+import { Loading } from '../Loading/Loading'
 
 type ListItemProps = {
+  loading?: boolean
   isFavorite?: boolean
   children: ReactNode
   defaulCheched?: boolean
   icon?: ReactNode
   onChange?(value: boolean): void
+  onChangeFavorite?(): void
+  to: string
 }
 
 const ListItemComponent = ({
   children,
+  loading,
   defaulCheched = false,
   isFavorite = false,
   icon,
+  to,
+  onChangeFavorite,
   onChange,
 }: ListItemProps) => {
-  const [favorite, setFavorite] = useState<boolean>(isFavorite);
+  // const [favorite, setFavorite] = useState<boolean>(isFavorite)
 
   return (
-    <li className="list-none">
-      <Link
-        to="#"
-        className="rouded flex w-full items-center justify-between gap-1 rounded bg-mauve-6 px-2 py-1 transition-colors duration-200 hover:cursor-pointer hover:bg-mauve-7"
-      >
-        <div className="flex items-center gap-2">
-          <Checkbox
-            defaultChecked={defaulCheched}
-            onChange={(value) => onChange?.(value)}
-          />
-          <span>{children}</span>
-        </div>
+    <li className="rouded flex w-full list-none items-center justify-between gap-1 rounded bg-mauve-6 px-2 py-1 transition-colors duration-200 hover:cursor-pointer hover:bg-mauve-7">
+      <div className="flex w-full items-center gap-2">
+        <Checkbox
+          defaultChecked={defaulCheched}
+          onChange={(value) => onChange?.(value)}
+        />
+        <Link to={to} className="w-full">
+          {children}
+        </Link>
+      </div>
 
-        {icon && (
-          <button
-            className={`${
-              favorite ? 'text-tomato-9' : 'text-current'
-            } pointer-events-`}
-            onClick={(e) => {
-              e.stopPropagation()
-              setFavorite(!favorite)
-            }}
-          >
-            {icon}
-          </button>
-        )}
-      </Link>
+      {icon && (
+        <button
+          className={`${
+            isFavorite ? 'text-tomato-9' : 'text-current'
+          } pointer-events-`}
+          onClick={(e) => {
+            e.stopPropagation()
+            // setFavorite(!favorite)
+            onChangeFavorite && onChangeFavorite()
+          }}
+        >
+          {loading ? <Loading size={4} /> : icon }
+        </button>
+      )}
     </li>
   )
 }
@@ -58,7 +62,7 @@ const ListFilterItem = ({
   icon,
   name,
 }: Pick<ListItemProps, 'children' | 'icon'> & { name: ListFilterItemType }) => {
-  const filter = getQueryParams('filter');
+  const filter = getQueryParams('filter')
 
   return (
     <li className="list-none">

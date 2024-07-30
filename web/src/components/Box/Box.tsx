@@ -18,9 +18,9 @@ export const Box = ({
 }: BoxProps) => {
   return (
     <div
-      className={`flex h-full w-full flex-col  items-end justify-between rounded bg-mauve-3 p-5 text-white ${className}`}
+      className={`flex w-full flex-col  items-end justify-between rounded bg-mauve-3 p-5 text-white ${className}`}
     >
-      <div className="h-full w-full">
+      <div className=" w-full">
         {(title || action) && (
           <div className="mb-4 flex items-center justify-between gap-4">
             <h3>{title}</h3>
@@ -29,7 +29,7 @@ export const Box = ({
         )}
 
         <div
-          className={`flex h-full w-full ${
+          className={`flex  w-full ${
             orientation === 'vertical' ? 'flex-col' : ''
           }}`}
         >

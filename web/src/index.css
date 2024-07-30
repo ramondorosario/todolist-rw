@@ -5,15 +5,25 @@
 @tailwind utilities;
 
 @layer base {
-	body {
-		 @apply bg-mauve-2 h-screen text-white
-		}
+  body {
+    @apply h-screen bg-mauve-2 text-white;
+  }
 
-	#redwood-app {
-		@apply h-full
-	}
+  #redwood-app {
+    @apply h-full;
+  }
 
-	h3 {
-		@apply text-xl font-bold text-tomato-9
-	}
- }
+  h3 {
+    @apply text-xl font-bold text-tomato-9;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 18px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #625f69;
+  border-radius: 8px;
+  border: 6px solid #232225;
+}

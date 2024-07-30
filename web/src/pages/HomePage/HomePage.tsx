@@ -14,8 +14,9 @@ import {
 
 import { useState } from 'react'
 import { TaskForm } from '@/components/TaskForm/TaskForm'
-import { Loading } from '@/components/Loading/Loading'
 import { CreateTaskInput, MutationcreateTaskArgs, Task } from 'types/graphql'
+import { routes } from '@redwoodjs/router'
+import { ListFilterItemType } from '@/utils/getQueryParams'
 
 const CREATE_TASKS = gql`
   mutation CreateTaskMutation($input: CreateTaskInput!) {
@@ -29,43 +30,93 @@ const CREATE_TASKS = gql`
   }
 `
 
-const GET_TASKS = gql`
-  query GetTasks {
-    tasks {
+const MAKE_FAVORITE_TASK = gql`
+  mutation MakeFavoriteTaskMutation($id: String!, $isFavorite: Boolean!) {
+    makeFavoriteTask(id: $id, isFavorite: $isFavorite) {
       id
-      title
+      isFavorite
     }
   }
 `
 
-const HomePage = () => {
-  const [openModal, setOpenModal] = useState<boolean>(false)
+const GET_TASKS = gql`
+  query GetTasks($filter: String) {
+    tasks(filter: $filter) {
+      id
+      title
+      isFavorite
+    }
+  }
+`
 
-  const { loading, data } = useQuery<{
-    tasks: {
-      id: string
-      title: string
-    }[]
-  }>(GET_TASKS)
-  const [create, { loading: mutationLoading }] = useMutation<
-    { createTask: Task },
-    MutationcreateTaskArgs
-  >(CREATE_TASKS, {
+const DELETE_TASKS = gql`
+  mutation DeleteTasksMutation($ids: [String]!) {
+    deleteTasks(ids: $ids)
+  }
+`
+
+const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
+  const [openModal, setOpenModal] = useState<boolean>(false)
+  const [loadingFavoriteTask, setLoadingFavoriteTask] = useState<string | null>(
+    null
+  )
+  const [checkedTasks, setCheckedTasks] = useState<{ [key: string]: boolean }>()
+
+  const { loading, data, refetch } = useQuery<
+    {
+      tasks: {
+        id: string
+        title: string
+        isFavorite: boolean
+      }[]
+    },
+    { filter?: ListFilterItemType }
+  >(GET_TASKS, { variables: { filter } })
+
+  const [makeFavoriteTask] = useMutation<
+    { makeFavoriteTask: Task },
+    { id: string; isFavorite: boolean }
+  >(MAKE_FAVORITE_TASK, {
     update(cache, { data }) {
       const currentList = cache.readQuery<{ tasks: Task[] }>({
         query: GET_TASKS,
       })
+      const findedTask = currentList?.tasks.find(
+        (t) => t.id === data?.makeFavoriteTask.id
+      )
 
-      if (currentList && data) {
+      if (Boolean(currentList?.tasks.length && !!data && !!findedTask)) {
         cache.writeQuery({
           query: GET_TASKS,
+          variables: {
+            filter,
+          },
           data: {
-            tasks: [...currentList.tasks, data.createTask],
+            tasks: [...currentList!.tasks],
           },
         })
       }
     },
   })
+
+  function handleFavoriteTaskChange(id: string, isFavorite: boolean) {
+    setLoadingFavoriteTask(id)
+    makeFavoriteTask({
+      variables: { id, isFavorite },
+    }).finally(() => {
+      setLoadingFavoriteTask(null)
+    })
+  }
+
+  const [create, { loading: mutationLoading }] = useMutation<
+    { createTask: Task },
+    MutationcreateTaskArgs
+  >(CREATE_TASKS, { onCompleted: () => refetch() })
+
+  const [deleteMany, { loading: deleteLoading }] = useMutation<
+    { deleteTasks: string[] },
+    { ids: string[] }
+  >(DELETE_TASKS, { onCompleted: () => refetch() })
 
   function onSubmit(input: CreateTaskInput) {
     create({
@@ -77,7 +128,19 @@ const HomePage = () => {
     })
   }
 
-  console.log(data)
+  function onCheckedTask(id: string, checked: boolean) {
+    setCheckedTasks((prev) => {
+      if (prev) {
+        prev[id] = checked
+
+        return { ...prev }
+      }
+
+      return { [id]: checked }
+    })
+  }
+
+  console.log({ checkedTasks })
 
   return (
     <>
@@ -88,7 +151,7 @@ const HomePage = () => {
           <ListItem.Filter name="all" icon={<Inbox size={20} />}>
             Todos
           </ListItem.Filter>
-          <ListItem.Filter name="favorite" icon={<Star size={20} />}>
+          <ListItem.Filter name="favorites" icon={<Star size={20} />}>
             Favoritos
           </ListItem.Filter>
           <ListItem.Filter name="today" icon={<CalendarCheck size={20} />}>
@@ -137,7 +200,12 @@ const HomePage = () => {
                       >
                         Cancelar
                       </Button>
-                      <Button disabled={mutationLoading}>Cadastrar</Button>
+                      <Button
+                        loading={mutationLoading}
+                        disabled={mutationLoading}
+                      >
+                        Cadastrar
+                      </Button>
                     </DialogFooter>
                   }
                 />
@@ -146,12 +214,34 @@ const HomePage = () => {
           </>
         }
       >
-        {loading ? (
-          <Loading />
+        {loading || deleteLoading ? (
+          <div role="status" className="w-full animate-pulse">
+            <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <span className="sr-only">Loading...</span>
+          </div>
         ) : (
           <ListContainer gap={2}>
+            {Object.values(checkedTasks ?? {}).some((checked) => checked) && (
+              <div className="flex w-full justify-end gap-2">
+                <Button variant="destructive">Excluir Selecionados</Button>
+                <Button variant="secondary" >Concluir Selecionados</Button>
+              </div>
+            )}
+
             {data?.tasks.map((task) => (
-              <ListItem.Root key={task.id} icon={<Star size={20} />}>
+              <ListItem.Root
+                key={task.id}
+                to={routes.task({ id: task.id })}
+                icon={<Star size={20} />}
+                isFavorite={task.isFavorite}
+                loading={loadingFavoriteTask === task.id}
+                onChangeFavorite={() =>
+                  handleFavoriteTaskChange(task.id, !task.isFavorite)
+                }
+                onChange={(checked) => onCheckedTask(task.id, checked)}
+              >
                 {task.title}
               </ListItem.Root>
             ))}
