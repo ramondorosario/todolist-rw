@@ -8,12 +8,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
-import { Link, routes } from '@redwoodjs/router'
+import { Link, navigate, routes } from '@redwoodjs/router'
 import { Metadata, useMutation, useQuery } from '@redwoodjs/web'
 import { useState } from 'react'
 import { MoveLeft } from 'lucide-react'
-import { Task, UpdateTaskInput, MutationupdateTaskArgs } from 'types/graphql'
+import { Task, MutationupdateTaskArgs } from 'types/graphql'
 import { format } from 'date-fns'
+import { toast, Toaster } from '@redwoodjs/web/toast'
 
 const GET_TASK = gql`
   query GetTask($id: String!) {
@@ -36,6 +37,12 @@ const UPDATE_TASKS = gql`
       dueDate
       priority
     }
+  }
+`
+
+const COMPLETE_TASKS = gql`
+  mutation CompleteTasksMutation($ids: [String]!) {
+    completeTasks(ids: $ids)
   }
 `
 
@@ -123,11 +130,25 @@ const TaskPage = ({ id }: { id: string }) => {
     },
   })
 
+  const [complete, { loading: completeLoading }] = useMutation<
+    { completeTasks: string[] },
+    { ids: string[] }
+  >(COMPLETE_TASKS, {
+    onError(error) {
+      toast(error.message)
+    },
+    onCompleted() {
+      toast('Tarefa concluída')
+      navigate('/')
+    },
+  })
+
   return (
     <>
       <Metadata title="Task" description="Task page" />
+      <Toaster toastOptions={{ className: 'rw-toast', duration: 3000 }} />
 
-      <div className="col-span-2 flex h-full flex-col gap-4 bg-mauve-3 p-6 rounded">
+      <div className="col-span-2 flex h-full flex-col gap-4 rounded bg-mauve-3 p-6">
         {loading || updateLoading ? (
           <Loading />
         ) : (
@@ -156,7 +177,19 @@ const TaskPage = ({ id }: { id: string }) => {
                   })
                 }
               />
-              <Button>Concluir</Button>
+              <Button
+                loading={completeLoading}
+                disabled={completeLoading}
+                onClick={() =>
+                  complete({
+                    variables: {
+                      ids: [id],
+                    },
+                  })
+                }
+              >
+                Concluir
+              </Button>
             </div>
           </>
         )}
