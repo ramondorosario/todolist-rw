@@ -127,7 +127,7 @@ const TaskPage = ({ id }: { id: string }) => {
     <>
       <Metadata title="Task" description="Task page" />
 
-      <div className="col-span-2 flex h-full flex-col gap-4">
+      <div className="col-span-2 flex h-full flex-col gap-4 bg-mauve-3 p-6 rounded">
         {loading || updateLoading ? (
           <Loading />
         ) : (

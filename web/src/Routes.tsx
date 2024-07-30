@@ -12,7 +12,7 @@ const Routes = () => {
         <Route path="/forgot-password" page={ForgotPasswordPage} name="forgotPassword" />
         <Route path="/reset-password" page={ResetPasswordPage} name="resetPassword" />
         <PrivateSet unauthenticated="login">
-          <Route path="/home" page={HomePage} name="home" />
+          <Route path="/" page={HomePage} name="home" />
           <Route path="/task/{id}" page={TaskPage} name="task" />
         </PrivateSet>
       </Set>
