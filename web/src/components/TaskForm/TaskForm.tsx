@@ -43,7 +43,6 @@ export const TaskForm = ({
     <form
       className="flex flex-col gap-4"
       onSubmit={handleSubmit((data) => {
-        console.log({ data })
         onSubmit?.(data)
       })}
     >
