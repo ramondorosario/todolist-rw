@@ -8,7 +8,7 @@ import {Input} from './Input'
 describe('Input', () => {
   it('renders successfully', () => {
     expect(() => {
-      render(<Input id='test' label='Label' />)
+      render(<Input.Root id='test' />)
     }).not.toThrow()
   })
 })

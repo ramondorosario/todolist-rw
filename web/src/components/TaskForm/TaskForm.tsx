@@ -48,7 +48,7 @@ export const TaskForm = ({
       })}
     >
       <Label text="Título" errorMessage={errors.title?.message}>
-        <Input placeholder="Insira um titulo" {...register('title')} />
+        <Input.Root placeholder="Insira um titulo" {...register('title')} />
       </Label>
 
       <Label text="Descrição" errorMessage={errors.description?.message}>
