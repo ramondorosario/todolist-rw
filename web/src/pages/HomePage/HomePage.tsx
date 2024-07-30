@@ -55,6 +55,12 @@ const DELETE_TASKS = gql`
   }
 `
 
+const COMPLETE_TASKS = gql`
+  mutation CompleteTasksMutation($ids: [String]!) {
+    completeTasks(ids: $ids)
+  }
+`
+
 const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
   const [openModal, setOpenModal] = useState<boolean>(false)
   const [loadingFavoriteTask, setLoadingFavoriteTask] = useState<string | null>(
@@ -111,12 +117,89 @@ const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
   const [create, { loading: mutationLoading }] = useMutation<
     { createTask: Task },
     MutationcreateTaskArgs
-  >(CREATE_TASKS, { onCompleted: () => refetch() })
+  >(CREATE_TASKS, {
+    update(cache, { data }) {
+      {
+        const currentList = cache.readQuery<{ tasks: Task[] }>({
+          query: GET_TASKS,
+        })
+
+        if (currentList && data) {
+          cache.writeQuery({
+            query: GET_TASKS,
+            variables: {
+              filter,
+            },
+            data: {
+              tasks: [...currentList.tasks, data.createTask],
+            },
+          })
+        }
+      }
+    },
+  })
 
   const [deleteMany, { loading: deleteLoading }] = useMutation<
     { deleteTasks: string[] },
     { ids: string[] }
-  >(DELETE_TASKS, { onCompleted: () => refetch() })
+  >(DELETE_TASKS, {
+    update(cache, { data }) {
+      {
+        const currentList = cache.readQuery<{ tasks: Task[] }>({
+          query: GET_TASKS,
+        })
+
+        if (currentList && data) {
+          cache.writeQuery({
+            query: GET_TASKS,
+            variables: {
+              filter,
+            },
+            data: {
+              tasks: [
+                ...currentList.tasks.filter(
+                  (task) => !data.deleteTasks.includes(task.id)
+                ),
+              ],
+            },
+          })
+        }
+      }
+    },
+    onCompleted: () => {
+      setCheckedTasks({})
+    },
+  })
+
+  const [completeMany, { loading: completeLoading }] = useMutation<
+    { completeTasks: string[] },
+    { ids: string[] }
+  >(COMPLETE_TASKS, {
+    update(cache, { data }) {
+      {
+        const currentList = cache.readQuery<{ tasks: Task[] }>({
+          query: GET_TASKS,
+        })
+
+        if (currentList && data) {
+          cache.writeQuery({
+            query: GET_TASKS,
+            variables: {
+              filter,
+            },
+            data: {
+              tasks: [
+                ...currentList.tasks.filter((task) =>
+                  !data.completeTasks.includes(task.id)
+                ),
+              ],
+            },
+          })
+        }
+      }
+    },
+    onCompleted: () => setCheckedTasks({}),
+  })
 
   function onSubmit(input: CreateTaskInput) {
     create({
@@ -139,8 +222,6 @@ const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
       return { [id]: checked }
     })
   }
-
-  console.log({ checkedTasks })
 
   return (
     <>
@@ -214,9 +295,9 @@ const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
           </>
         }
       >
-        {loading || deleteLoading ? (
+        {loading ? (
           <div role="status" className="w-full animate-pulse">
-            <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div className="bg-ma mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
             <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
             <div className="mb-2 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
             <span className="sr-only">Loading...</span>
@@ -225,8 +306,39 @@ const HomePage = ({ filter }: { filter: ListFilterItemType }) => {
           <ListContainer gap={2}>
             {Object.values(checkedTasks ?? {}).some((checked) => checked) && (
               <div className="flex w-full justify-end gap-2">
-                <Button variant="destructive">Excluir Selecionados</Button>
-                <Button variant="secondary" >Concluir Selecionados</Button>
+                <Button
+                  variant="destructive"
+                  loading={deleteLoading}
+                  disabled={deleteLoading || completeLoading}
+                  onClick={() =>
+                    checkedTasks &&
+                    deleteMany({
+                      variables: {
+                        ids: Object.entries(checkedTasks)
+                          .filter(([_, value]) => value)
+                          .map(([key]) => key),
+                      },
+                    })
+                  }
+                >
+                  Excluir selecionados
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={deleteLoading || completeLoading}
+                  onClick={() =>
+                    checkedTasks &&
+                    completeMany({
+                      variables: {
+                        ids: Object.entries(checkedTasks)
+                          .filter(([_, value]) => value)
+                          .map(([key]) => key),
+                      },
+                    })
+                  }
+                >
+                  Concluir selecionados
+                </Button>
               </div>
             )}
 

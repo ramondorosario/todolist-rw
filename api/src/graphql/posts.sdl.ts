@@ -39,5 +39,6 @@ export const schema = gql`
     updateTask(id: String!, input: UpdateTaskInput!): Task! @skipAuth
     deleteTasks(ids: [String]!): [String]! @skipAuth
     makeFavoriteTask(id: String!, isFavorite: Boolean!): Task! @skipAuth
+    completeTasks(ids: [String]!): [String]! @skipAuth
   }
 `

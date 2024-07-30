@@ -78,3 +78,14 @@ export const makeFavoriteTask: MutationResolvers['makeFavoriteTask'] = async ({
     data: { isFavorite },
   })
 }
+
+export const completeTasks: MutationResolvers['completeTasks'] = async ({
+  ids,
+}) => {
+  await db.task.updateMany({
+    where: { id: { in: ids } },
+    data: { isCompleted: true },
+  })
+
+  return ids
+}
